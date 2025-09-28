@@ -12,6 +12,7 @@ pygame.display.set_caption("Agentic Life Simulation")
 
 # 3. Define colors
 BACKGROUND_COLOR = (20, 20, 40) # A dark blue
+ROAD_COLOR = (80, 80, 90)       # Gray for the road
 
 # 4. Main game loop
 def main():
@@ -24,6 +25,11 @@ def main():
 
         # Drawing
         screen.fill(BACKGROUND_COLOR) # Fill the background
+
+        # Draw the road rectangle in the middle of the screen
+        road_y_position = SCREEN_HEIGHT // 2 - 25
+        road_rect = pygame.Rect(0, road_y_position, SCREEN_WIDTH, 50)
+        pygame.draw.rect(screen, ROAD_COLOR, road_rect)
 
         # Update the display
         pygame.display.flip()
