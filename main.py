@@ -1,6 +1,12 @@
 import pygame
 import sys
 
+class Task:
+    def __init__(self, progress_pos, task_type='small'):
+        self.progress_pos = progress_pos # Position on the 0-100 timeline
+        self.type = task_type
+        self.completed = False
+
 class Character:
     # Add a new 'display_size' parameter
     def __init__(self, spritesheet_path, start_pos, frame_size, layout, display_size):
@@ -89,12 +95,34 @@ def main():
         display_size=CHARACTER_DISPLAY_SIZE
     )
 
+    # A list to store all created tasks
+    tasks = []
+
     running = True
     while running:
         # Event handling
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+
+            # -- NEW: HANDLE MOUSE CLICKS TO CREATE TASKS --
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                # Check if the click was a left-click and was on the road
+                if event.button == 1 and road_rect.collidepoint(event.pos):
+                    # Calculate the progress percentage of the click
+                    start_margin = 50
+                    road_width = SCREEN_WIDTH - (2 * start_margin)
+                    click_x = event.pos[0] - start_margin
+                    progress_pos = (click_x / road_width) * 100
+                    
+                    # Ensure progress is within bounds (0-100)
+                    progress_pos = max(0, min(100, progress_pos))
+
+                    # Create a new task and add it to our list
+                    new_task = Task(progress_pos=progress_pos)
+                    tasks.append(new_task)
+                    print(f"Created task at {progress_pos:.1f}%")
+
             # Check if any key is pressed
             if event.type == pygame.KEYDOWN:
                 # Check if the pressed key is the spacebar
@@ -112,14 +140,16 @@ def main():
         road_rect = pygame.Rect(0, road_center_y - 25, SCREEN_WIDTH, 50)
         pygame.draw.rect(screen, ROAD_COLOR, road_rect)
 
-        # -- NEW CODE: DYNAMICALLY SET POSITION BASED ON PROGRESS --
-        # Define the margins for the road
+        # -- NEW: DRAW ALL THE TASKS IN THE LIST --
         start_margin = 50
         road_width = SCREEN_WIDTH - (2 * start_margin)
-        # Calculate the x position
+        for task in tasks:
+            task_x = start_margin + (road_width * (task.progress_pos / 100))
+            # Draw a white circle for the task
+            pygame.draw.circle(screen, (255, 255, 255), (task_x, road_center_y), 8)
+
+        # Set character position based on progress
         player.rect.centerx = start_margin + (road_width * (player.progress / 100))
-        
-        # Keep the y position centered on the road
         player.rect.centery = road_center_y
 
         # Draw the character at its new position
