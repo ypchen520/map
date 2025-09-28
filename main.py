@@ -33,6 +33,7 @@ class Character:
         self.animation_speed_ms = 180
         self.last_update_time = pygame.time.get_ticks()
         self.progress = 0
+        self.target_task = None
 
     # The load_frames method also needs to accept 'display_size'
     def load_frames(self, frame_size, layout, display_size):
@@ -79,14 +80,14 @@ def main():
     # Calculate the vertical center of the road
     road_center_y = SCREEN_HEIGHT // 2
 
-    # Example 1: A horizontal strip of 4 frames (128x32 total size)
+    # --- Colors for Tasks ---
+    TASK_COLOR = (255, 255, 255) # White
+    COMPLETED_COLOR = (120, 120, 120) # Gray
+
+    # --- Character Setup ---
     CHARACTER_FRAME_SIZE = (96, 96) # The size of ONE frame
     CHARACTER_LAYOUT = (4, 1)       # 4 columns, 1 row
-
     CHARACTER_DISPLAY_SIZE = (192, 192)
-
-    # Create an instance of our character
-    # We place it at x=50 to start, and vertically centered on the road
     player = Character(
         spritesheet_path='sprites/lucky-idle.png',
         start_pos=(50, road_center_y),
@@ -123,14 +124,39 @@ def main():
                     tasks.append(new_task)
                     print(f"Created task at {progress_pos:.1f}%")
 
-            # Check if any key is pressed
-            if event.type == pygame.KEYDOWN:
-                # Check if the pressed key is the spacebar
-                if event.key == pygame.K_SPACE:
-                    player.progress += 5  # Increase progress by 5
-                    # Cap the progress at 100 to prevent going off-screen
-                    player.progress = min(player.progress, 100)
-                    print(f"Progress: {player.progress}%")
+            # # Check if any key is pressed
+            # if event.type == pygame.KEYDOWN:
+            #     # Check if the pressed key is the spacebar
+            #     if event.key == pygame.K_SPACE:
+            #         player.progress += 5  # Increase progress by 5
+            #         # Cap the progress at 100 to prevent going off-screen
+            #         player.progress = min(player.progress, 100)
+            #         print(f"Progress: {player.progress}%")
+
+        # -- NEW: AGENT "BRAIN" LOGIC STARTS HERE --
+        
+        # 1. If the character has no target, find one.
+        if player.target_task is None:
+            # Find the first uncompleted task that is ahead of the player
+            uncompleted_tasks = [t for t in tasks if not t.completed and t.progress_pos > player.progress]
+            if uncompleted_tasks:
+                # Sort them by position to find the closest one
+                uncompleted_tasks.sort(key=lambda t: t.progress_pos)
+                player.target_task = uncompleted_tasks[0]
+
+        # 2. If the character has a target, move towards it.
+        if player.target_task is not None:
+            # Move forward by a small amount each frame
+            player.progress += 0.2 # This is the character's "speed"
+
+            # 3. Check for task completion.
+            if player.progress >= player.target_task.progress_pos:
+                player.progress = player.target_task.progress_pos # Snap to the task position
+                player.target_task.completed = True
+                player.target_task = None # Reset target so it can find a new one
+                print("Task Completed!")
+
+        # -- AGENT "BRAIN" LOGIC ENDS HERE --
 
         # Update the character's animation each loop
         player.update_animation()
@@ -141,12 +167,18 @@ def main():
         pygame.draw.rect(screen, ROAD_COLOR, road_rect)
 
         # -- NEW: DRAW ALL THE TASKS IN THE LIST --
-        start_margin = 50
-        road_width = SCREEN_WIDTH - (2 * start_margin)
+        # Draw tasks with different colors for completed ones
+        start_margin, road_width = 50, SCREEN_WIDTH - 100
         for task in tasks:
             task_x = start_margin + (road_width * (task.progress_pos / 100))
-            # Draw a white circle for the task
-            pygame.draw.circle(screen, (255, 255, 255), (task_x, road_center_y), 8)
+            color = COMPLETED_COLOR if task.completed else TASK_COLOR
+            pygame.draw.circle(screen, color, (task_x, road_center_y), 8)
+        # start_margin = 50
+        # road_width = SCREEN_WIDTH - (2 * start_margin)
+        # for task in tasks:
+        #     task_x = start_margin + (road_width * (task.progress_pos / 100))
+        #     # Draw a white circle for the task
+        #     pygame.draw.circle(screen, (255, 255, 255), (task_x, road_center_y), 8)
 
         # Set character position based on progress
         player.rect.centerx = start_margin + (road_width * (player.progress / 100))
