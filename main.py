@@ -95,19 +95,34 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            # Check if any key is pressed
+            if event.type == pygame.KEYDOWN:
+                # Check if the pressed key is the spacebar
+                if event.key == pygame.K_SPACE:
+                    player.progress += 5  # Increase progress by 5
+                    # Cap the progress at 100 to prevent going off-screen
+                    player.progress = min(player.progress, 100)
+                    print(f"Progress: {player.progress}%")
 
         # Update the character's animation each loop
         player.update_animation()
 
         # Drawing
         screen.fill(BACKGROUND_COLOR) # Fill the background
-
-        # Draw the road rectangle in the middle of the screen
-        road_y_position = SCREEN_HEIGHT // 2 - 25
-        road_rect = pygame.Rect(0, road_y_position, SCREEN_WIDTH, 50)
+        road_rect = pygame.Rect(0, road_center_y - 25, SCREEN_WIDTH, 50)
         pygame.draw.rect(screen, ROAD_COLOR, road_rect)
 
-        # Draw the character (it will now be the current animation frame)
+        # -- NEW CODE: DYNAMICALLY SET POSITION BASED ON PROGRESS --
+        # Define the margins for the road
+        start_margin = 50
+        road_width = SCREEN_WIDTH - (2 * start_margin)
+        # Calculate the x position
+        player.rect.centerx = start_margin + (road_width * (player.progress / 100))
+        
+        # Keep the y position centered on the road
+        player.rect.centery = road_center_y
+
+        # Draw the character at its new position
         screen.blit(player.image, player.rect)
 
         # Update the display
