@@ -96,13 +96,21 @@ def main():
     CHARACTER_FRAME_SIZE = (96, 96) # The size of ONE frame
     CHARACTER_LAYOUT = (4, 1)       # 4 columns, 1 row
     CHARACTER_DISPLAY_SIZE = (192, 192)
-    player = Character(
-        spritesheet_path='sprites/lucky-idle.png',
-        start_pos=(50, road_center_y),
-        frame_size=CHARACTER_FRAME_SIZE,
-        layout=CHARACTER_LAYOUT,
-        display_size=CHARACTER_DISPLAY_SIZE
-    )
+    # player = Character(
+    #     spritesheet_path='sprites/lucky-idle.png',
+    #     start_pos=(50, road_center_y),
+    #     frame_size=CHARACTER_FRAME_SIZE,
+    #     layout=CHARACTER_LAYOUT,
+    #     display_size=CHARACTER_DISPLAY_SIZE
+    # )
+
+    characters = []
+    # Create the first character, positioned slightly above the center
+    char1 = Character('sprites/lucky-idle.png', (50, road_center_y - 15), CHARACTER_FRAME_SIZE, CHARACTER_LAYOUT, CHARACTER_DISPLAY_SIZE)
+    # Create the second character, positioned slightly below the center
+    char2 = Character('sprites/lucky-idle.png', (50, road_center_y + 15), CHARACTER_FRAME_SIZE, CHARACTER_LAYOUT, CHARACTER_DISPLAY_SIZE)
+    characters.append(char1)
+    characters.append(char2)
 
     # A list to store all created tasks
     tasks = []
@@ -143,33 +151,31 @@ def main():
             #         player.progress = min(player.progress, 100)
             #         print(f"Progress: {player.progress}%")
 
-        # AGENT "BRAIN" LOGIC STARTS HERE --
+        # -- Loop through each character for updates --
+        for character in characters:
+            # -- AGENT "BRAIN" LOGIC STARTS HERE --
         
-        # 1. If the character has no target, find one.
-        if player.target_task is None:
-            # Find the first uncompleted task that is ahead of the player
-            uncompleted_tasks = [t for t in tasks if not t.completed and t.progress_pos > player.progress]
-            if uncompleted_tasks:
-                # Sort them by position to find the closest one
-                uncompleted_tasks.sort(key=lambda t: t.progress_pos)
-                player.target_task = uncompleted_tasks[0]
+            # 1. If the character has no target, find one.
+            if character.target_task is None:
+                uncompleted_tasks = [t for t in tasks if not t.completed and t.progress_pos > character.progress]
+                if uncompleted_tasks:
+                    uncompleted_tasks.sort(key=lambda t: t.progress_pos)
+                    character.target_task = uncompleted_tasks[0]
+            
+            if character.target_task is not None:
+                character.progress += 0.2
+                if character.progress >= character.target_task.progress_pos:
+                    character.progress = character.target_task.progress_pos
+                    # Only the first character to arrive completes the task
+                    if not character.target_task.completed:
+                        character.target_task.completed = True
+                        print("Task Completed!")
+                    character.target_task = None
 
-        # 2. If the character has a target, move towards it.
-        if player.target_task is not None:
-            # Move forward by a small amount each frame
-            player.progress += 0.2 # This is the character's "speed"
+            # -- AGENT "BRAIN" LOGIC ENDS HERE --
 
-            # 3. Check for task completion.
-            if player.progress >= player.target_task.progress_pos:
-                player.progress = player.target_task.progress_pos # Snap to the task position
-                player.target_task.completed = True
-                player.target_task = None # Reset target so it can find a new one
-                print("Task Completed!")
-
-        # -- AGENT "BRAIN" LOGIC ENDS HERE --
-
-        # Update the character's animation each loop
-        player.update_animation()
+            # Update the character's animation each loop
+            character.update_animation()
 
         # Drawing
         screen.fill(BACKGROUND_COLOR)
@@ -193,24 +199,15 @@ def main():
             
             pygame.draw.circle(screen, color, (task_x, road_center_y), radius)
 
-        # Set character position based on progress
-        player.rect.centerx = start_margin + (road_width * (player.progress / 100))
-        player.rect.centery = road_center_y
-
-        # Draw the character at its new position
-        screen.blit(player.image, player.rect)
+        # -- UPDATED: Loop through each character to draw it --
+        for character in characters:
+            character.rect.centerx = start_margin + (road_width * (character.progress / 100))
+            screen.blit(character.image, character.rect)
 
         # --- RENDER AND DRAW THE UI TEXT ---
-        if placement_mode == 'small':
-            mode_text = "Mode: Place Task"
-        elif placement_mode == 'milestone':
-            mode_text = "Mode: Place Milestone"
-        else:
-            mode_text = "" # Display nothing if no mode is active
-
-        if mode_text:
+        if placement_mode:
+            mode_text = f"Mode: Place {placement_mode.title()}"
             text_surface = UI_FONT.render(mode_text, True, TEXT_COLOR)
-            # Position the text in the top-left corner with a small margin
             screen.blit(text_surface, (10, 10))
 
         # Update the display
