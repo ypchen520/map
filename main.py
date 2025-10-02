@@ -9,7 +9,7 @@ class Task:
 
 class Character:
     # Add a new 'display_size' parameter
-    def __init__(self, spritesheet_path, start_pos, frame_size, layout, display_size):
+    def __init__(self, spritesheet_path, start_pos, frame_size, layout, display_size, speed=0.2):
         try:
             self.spritesheet = pygame.image.load(spritesheet_path).convert_alpha()
         except pygame.error as e:
@@ -34,6 +34,13 @@ class Character:
         self.last_update_time = pygame.time.get_ticks()
         self.progress = 0
         self.target_task = None
+        self.speed = speed # How fast the character moves
+        self.energy = 100  # Start with full energy
+        self.max_energy = 100
+
+        # -- FIX 1: Store the initial vertical position --
+        self.y_pos = start_pos[1]
+
 
     # The load_frames method also needs to accept 'display_size'
     def load_frames(self, frame_size, layout, display_size):
@@ -66,8 +73,8 @@ class Character:
 pygame.init()
 
 # 2. Set up the screen dimensions
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
+SCREEN_WIDTH = 1200
+SCREEN_HEIGHT = 900
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Agentic Life Simulation")
 
@@ -80,6 +87,10 @@ def main():
     # --- Setup ---
     road_center_y = SCREEN_HEIGHT // 2
     road_rect = pygame.Rect(0, road_center_y - 25, SCREEN_WIDTH, 50)
+
+    # --- Energy Bar Colors ---
+    ENERGY_BAR_BG = (50, 50, 50)
+    ENERGY_BAR_FILL = (60, 200, 60)
 
     # --- FONT AND TEXT SETUP ---
     UI_FONT = pygame.font.Font(None, 32) # Use Pygame's default font, size 32
@@ -106,9 +117,9 @@ def main():
 
     characters = []
     # Create the first character, positioned slightly above the center
-    char1 = Character('sprites/lucky-idle.png', (50, road_center_y - 15), CHARACTER_FRAME_SIZE, CHARACTER_LAYOUT, CHARACTER_DISPLAY_SIZE)
+    char1 = Character('sprites/lucky-idle.png', (50, road_center_y - 75), CHARACTER_FRAME_SIZE, CHARACTER_LAYOUT, CHARACTER_DISPLAY_SIZE)
     # Create the second character, positioned slightly below the center
-    char2 = Character('sprites/lucky-idle.png', (50, road_center_y + 15), CHARACTER_FRAME_SIZE, CHARACTER_LAYOUT, CHARACTER_DISPLAY_SIZE)
+    char2 = Character('sprites/lucky-idle.png', (50, road_center_y + 75), CHARACTER_FRAME_SIZE, CHARACTER_LAYOUT, CHARACTER_DISPLAY_SIZE)
     characters.append(char1)
     characters.append(char2)
 
@@ -153,26 +164,37 @@ def main():
 
         # -- Loop through each character for updates --
         for character in characters:
-            # -- AGENT "BRAIN" LOGIC STARTS HERE --
-        
-            # 1. If the character has no target, find one.
+            # --- Agent "Brain" Logic with Energy ---
+            # 1. If idle, decide whether to work or rest.
             if character.target_task is None:
-                uncompleted_tasks = [t for t in tasks if not t.completed and t.progress_pos > character.progress]
-                if uncompleted_tasks:
-                    uncompleted_tasks.sort(key=lambda t: t.progress_pos)
-                    character.target_task = uncompleted_tasks[0]
+                # If energy is low, rest.
+                if character.energy < character.max_energy:
+                    character.energy += 0.001 # Recovery rate
+                    character.energy = min(character.energy, character.max_energy)
+                # If energy is high enough, find a task.
+                if character.energy > 20: # Must have at least 20 energy to start a task
+                    uncompleted_tasks = [t for t in tasks if not t.completed and t.progress_pos > character.progress]
+                    if uncompleted_tasks:
+                        uncompleted_tasks.sort(key=lambda t: t.progress_pos)
+                        character.target_task = uncompleted_tasks[0]
             
-            if character.target_task is not None:
-                character.progress += 0.2
+            # 2. If working on a task, move and use energy.
+            elif character.energy > 0:
+                character.progress += character.speed
+                character.energy -= 0.15 # Energy drain rate
+
+                # 3. Check for task completion.
                 if character.progress >= character.target_task.progress_pos:
                     character.progress = character.target_task.progress_pos
-                    # Only the first character to arrive completes the task
                     if not character.target_task.completed:
                         character.target_task.completed = True
                         print("Task Completed!")
                     character.target_task = None
-
-            # -- AGENT "BRAIN" LOGIC ENDS HERE --
+            
+            # 4. If out of energy while working, stop.
+            elif character.energy <= 0:
+                character.target_task = None # Give up on the task
+                print("Character is exhausted and stopped working!")
 
             # Update the character's animation each loop
             character.update_animation()
@@ -199,10 +221,38 @@ def main():
             
             pygame.draw.circle(screen, color, (task_x, road_center_y), radius)
 
-        # -- UPDATED: Loop through each character to draw it --
+        # Draw characters and their energy bars
         for character in characters:
-            character.rect.centerx = start_margin + (road_width * (character.progress / 100))
+            char_x_pos = start_margin + (road_width * (character.progress / 100))
+            
+            # Set the character's rect position
+            character.rect.centerx = char_x_pos
+            character.rect.centery = character.y_pos
+            
+            # Draw the character
             screen.blit(character.image, character.rect)
+
+            # --- DRAW ENERGY BAR (CORRECTED) ---
+            bar_width, bar_height = 50, 8
+            
+            # -- FIX: Calculate the bar's y-position manually --
+            # Get the character's known height from our constant
+            # character_height = CHARACTER_DISPLAY_SIZE[1] 
+            # character_height = CHARACTER_FRAME_SIZE[1]
+            # # Calculate the bottom edge: center y + half the height
+            # character_bottom_edge = character.y_pos + (character_height / 2)
+            # # Position the bar 5 pixels below that edge
+            # bar_y = character_bottom_edge + 5
+            bar_y = character.y_pos + CHARACTER_FRAME_SIZE[1] / 3
+
+            # bar_x = char_x_pos - bar_width / 2
+            bar_x = char_x_pos - bar_width / 8
+
+            energy_percentage = character.energy / character.max_energy
+            fill_width = bar_width * energy_percentage
+            
+            pygame.draw.rect(screen, ENERGY_BAR_BG, (bar_x, bar_y, bar_width, bar_height))
+            pygame.draw.rect(screen, ENERGY_BAR_FILL, (bar_x, bar_y, fill_width, bar_height))
 
         # --- RENDER AND DRAW THE UI TEXT ---
         if placement_mode:
