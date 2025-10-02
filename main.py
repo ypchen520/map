@@ -77,12 +77,20 @@ ROAD_COLOR = (80, 80, 90)       # Gray for the road
 
 # 4. Main game loop
 def main():
-    # Calculate the vertical center of the road
+    # --- Setup ---
     road_center_y = SCREEN_HEIGHT // 2
+    road_rect = pygame.Rect(0, road_center_y - 25, SCREEN_WIDTH, 50)
 
-    # --- Colors for Tasks ---
-    TASK_COLOR = (255, 255, 255) # White
-    COMPLETED_COLOR = (120, 120, 120) # Gray
+    # --- FONT AND TEXT SETUP ---
+    UI_FONT = pygame.font.Font(None, 32) # Use Pygame's default font, size 32
+    TEXT_COLOR = (220, 220, 220)         # A light gray for the text
+
+    # --- Define colors and sizes for different task types ---
+    TASK_COLOR = (255, 255, 255)         # White
+    MILESTONE_COLOR = (255, 215, 0)      # Gold
+    COMPLETED_COLOR = (120, 120, 120)    # Gray
+    TASK_RADIUS = 8
+    MILESTONE_RADIUS = 12
 
     # --- Character Setup ---
     CHARACTER_FRAME_SIZE = (96, 96) # The size of ONE frame
@@ -99,6 +107,8 @@ def main():
     # A list to store all created tasks
     tasks = []
 
+    placement_mode = None
+
     running = True
     while running:
         # Event handling
@@ -106,23 +116,23 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
 
-            # -- NEW: HANDLE MOUSE CLICKS TO CREATE TASKS --
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                # Check if the click was a left-click and was on the road
-                if event.button == 1 and road_rect.collidepoint(event.pos):
-                    # Calculate the progress percentage of the click
-                    start_margin = 50
-                    road_width = SCREEN_WIDTH - (2 * start_margin)
-                    click_x = event.pos[0] - start_margin
-                    progress_pos = (click_x / road_width) * 100
-                    
-                    # Ensure progress is within bounds (0-100)
-                    progress_pos = max(0, min(100, progress_pos))
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_s:
+                    placement_mode = 'small'
+                    print("Placement Mode: SMALL TASK (click to place)")
+                elif event.key == pygame.K_m:
+                    placement_mode = 'milestone'
+                    print("Placement Mode: MILESTONE (click to place)")
 
-                    # Create a new task and add it to our list
-                    new_task = Task(progress_pos=progress_pos)
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if placement_mode is not None and road_rect.collidepoint(event.pos):
+                    start_margin, road_width = 50, SCREEN_WIDTH - 100
+                    click_x = event.pos[0] - start_margin
+                    progress_pos = max(0, min(100, (click_x / road_width) * 100))
+                    new_task = Task(progress_pos=progress_pos, task_type=placement_mode)
                     tasks.append(new_task)
-                    print(f"Created task at {progress_pos:.1f}%")
+                    print(f"Placed {placement_mode.upper()} at {progress_pos:.1f}%")
+                    placement_mode = None
 
             # # Check if any key is pressed
             # if event.type == pygame.KEYDOWN:
@@ -133,7 +143,7 @@ def main():
             #         player.progress = min(player.progress, 100)
             #         print(f"Progress: {player.progress}%")
 
-        # -- NEW: AGENT "BRAIN" LOGIC STARTS HERE --
+        # AGENT "BRAIN" LOGIC STARTS HERE --
         
         # 1. If the character has no target, find one.
         if player.target_task is None:
@@ -162,23 +172,26 @@ def main():
         player.update_animation()
 
         # Drawing
-        screen.fill(BACKGROUND_COLOR) # Fill the background
-        road_rect = pygame.Rect(0, road_center_y - 25, SCREEN_WIDTH, 50)
+        screen.fill(BACKGROUND_COLOR)
         pygame.draw.rect(screen, ROAD_COLOR, road_rect)
 
-        # -- NEW: DRAW ALL THE TASKS IN THE LIST --
-        # Draw tasks with different colors for completed ones
+        # -- DRAW TASKS AND MILESTONES DIFFERENTLY --
         start_margin, road_width = 50, SCREEN_WIDTH - 100
         for task in tasks:
             task_x = start_margin + (road_width * (task.progress_pos / 100))
-            color = COMPLETED_COLOR if task.completed else TASK_COLOR
-            pygame.draw.circle(screen, color, (task_x, road_center_y), 8)
-        # start_margin = 50
-        # road_width = SCREEN_WIDTH - (2 * start_margin)
-        # for task in tasks:
-        #     task_x = start_margin + (road_width * (task.progress_pos / 100))
-        #     # Draw a white circle for the task
-        #     pygame.draw.circle(screen, (255, 255, 255), (task_x, road_center_y), 8)
+            
+            # Use different colors and sizes based on completion and type
+            if task.completed:
+                color = COMPLETED_COLOR
+                radius = MILESTONE_RADIUS if task.type == 'milestone' else TASK_RADIUS
+            elif task.type == 'milestone':
+                color = MILESTONE_COLOR
+                radius = MILESTONE_RADIUS
+            else:
+                color = TASK_COLOR
+                radius = TASK_RADIUS
+            
+            pygame.draw.circle(screen, color, (task_x, road_center_y), radius)
 
         # Set character position based on progress
         player.rect.centerx = start_margin + (road_width * (player.progress / 100))
@@ -186,6 +199,19 @@ def main():
 
         # Draw the character at its new position
         screen.blit(player.image, player.rect)
+
+        # --- RENDER AND DRAW THE UI TEXT ---
+        if placement_mode == 'small':
+            mode_text = "Mode: Place Task"
+        elif placement_mode == 'milestone':
+            mode_text = "Mode: Place Milestone"
+        else:
+            mode_text = "" # Display nothing if no mode is active
+
+        if mode_text:
+            text_surface = UI_FONT.render(mode_text, True, TEXT_COLOR)
+            # Position the text in the top-left corner with a small margin
+            screen.blit(text_surface, (10, 10))
 
         # Update the display
         pygame.display.flip()
