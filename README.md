@@ -6,8 +6,24 @@ The foundation for this game comes from Clear Code's fantastic tutorial: [Creati
 
 I'm building on it to create a mini life-sim that turns your TODO list into a game!
 
-## Setup
+## Basics
 
-### `main.py`
+### Setup
 
-### `settings.py`
+#### `main.py`
+
+- A `Game` class
+
+#### `settings.py`
+
+- Constants
+
+#### `level.py`
+
+Acts as the central controller for a single game level or scene. It's responsible for:
+- Managing the main game loop and all updates.
+- Loading the map, sprites, and collision objects.
+- Controlling the camera and drawing all elements.
+- Connecting all game systems (player, soil, weather, etc.).
+
+This self-contained structure makes it easy to add and switch between multiple levels in the future.
