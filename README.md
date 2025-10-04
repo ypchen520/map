@@ -32,7 +32,11 @@ This self-contained structure makes it easy to add and switch between multiple l
 
 #### `player.py`
 
-
+- image
+- movement
+  - direction
+  - 
+- update
 
 ## `pygame`
 
