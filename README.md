@@ -8,3 +8,6 @@ I'm building on it to create a mini life-sim that turns your TODO list into a ga
 
 ## Setup
 
+### `main.py`
+
+### `settings.py`
