@@ -25,4 +25,6 @@ class Level:
         """
         self.display_surface.fill('black')
         self.all_sprites.draw(self.display_surface) # draws every game object in the all_sprites group onto the screen.
-        self.all_sprites.update() # tells every game object in the group to run its own logic for that frame (e.g., move, animate, check for input).
+        
+        # Calls the update() method on every sprite in the group, running their individual logic for the frame (e.g., move, animate, check for input).
+        self.all_sprites.update(dt)

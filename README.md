@@ -30,6 +30,10 @@ This self-contained structure makes it easy to add and switch between multiple l
 
 ### Basic Player
 
+#### `player.py`
+
+
+
 ## `pygame`
 
 A `Surface` only handles **visuals** (the pixels of an image), while a `Rect` handles **position and collision** (the coordinates and dimensions). They are separate objects for separate jobs.
