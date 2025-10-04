@@ -1,5 +1,6 @@
 import pygame
 from settings import *
+from player import Player
 
 class Level:
     def __init__(self):
@@ -8,6 +9,11 @@ class Level:
 
         # creates a container to hold and manage all the game objects (like the player, enemies, and items).
         self.all_sprites = pygame.sprite.Group()
+
+        self.setup()
+
+    def setup(self):
+        self.player = Player(pos=(640, 360), group=self.all_sprites)
 
     def run(self, dt):
         """
