@@ -32,11 +32,22 @@ This self-contained structure makes it easy to add and switch between multiple l
 
 #### `player.py`
 
-- image
+This file defines the `Player` class, which handles all attributes and logic related to the user-controlled character.
+
+**Attributes**:
+- `image` and `rect`: The player's visual `Surface` and the `Rect` used for positioning and collision detection.
 - movement
-  - direction
-  - 
-- update
+  - `direction`
+  - `position`
+    - The `Rect` can only store integer coordinates
+    - To achieve smooth, frame-rate independent movement with `dt` (delta time), we use a separate `Vector2` called `pos` to store the player's precise floating-point position. 
+    - The `rect`'s position is then updated from `pos` at the end of each movement calculation.
+  - `speed`
+
+**Methods**:
+- `input()`: Checks for continuous key presses to determine the player's intended movement and updates the direction vector.
+- `move(dt)`: Calculates the movement for the current frame based on direction, speed, and dt.
+- `update(dt)`: The main method called by the sprite group on every frame. It orchestrates the player's actions by calling input() and then move().
 
 ## `pygame`
 

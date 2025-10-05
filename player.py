@@ -12,6 +12,8 @@ class Player(pygame.sprite.Sprite):
 
         # movement attributes
         self.direction = pygame.math.Vector2() # default: (0,0)
+        self.pos = pygame.math.Vector2(self.rect.center) # we'll need to update the self.rect in the end
+        self.speed = 200
 
     def input(self):
         # when to call the input() method? updating this player via update() called in the Spite group in the Level instance
@@ -30,7 +32,12 @@ class Player(pygame.sprite.Sprite):
             self.direction.x = -1
         else:
             self.direction.x = 0
+
+    def move(self, dt):
+        self.pos += self.direction * self.speed * dt
+        self.rect.center = self.pos
     
     def update(self, dt):
         # potentially using *args instead of dt
         self.input()
+        self.move(dt)
