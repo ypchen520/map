@@ -49,7 +49,14 @@ This self-contained structure makes it easy to add and switch between multiple l
 
 ### Importing Player Graphics
 
-Create a dictionary that maps animation names (e.g., `up`, `down`, `left_water`, `right_water`, etc.) to a list of corresponding `Surface`s that are created when loading the PNG images.
+Create a dictionary that maps animation names (e.g., `'up'`, `'down'`, `'left_water'`, `'right_water'`, etc.) to a list of corresponding `Surface`s that are created when loading the PNG images.
+
+### Animating the Player
+
+- Create `status` and `frame_index` as instance attributes to make each `Player` object stateful, allowing its methods to track and update the current animation state between frames.
+- `animate(dt)`: Loops through the animation frames for the player's current `status` (e.g., `'up'`, `'right_idle'`), updating the `self.image` on each frame to create animation.
+- `input()`: Reads keyboard input to set the player's direction vector and update the animation `status`.
+- `get_status()`: Appends `_idle` to the player's `status` string whenever the player is stationary, which triggers the idle animation.
 
 ## `pygame`
 
