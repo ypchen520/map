@@ -30,11 +30,9 @@ This self-contained structure makes it easy to add and switch between multiple l
 
 ### Basic Player
 
-#### `player.py`
+`player.py`: This file defines the `Player` class, which handles all attributes and logic related to the user-controlled character.
 
-This file defines the `Player` class, which handles all attributes and logic related to the user-controlled character.
-
-**Attributes**:
+#### Attributes
 - `image` and `rect`: The player's visual `Surface` and the `Rect` used for positioning and collision detection.
 - movement
   - `direction`
@@ -44,10 +42,14 @@ This file defines the `Player` class, which handles all attributes and logic rel
     - The `rect`'s position is then updated from `pos` at the end of each movement calculation.
   - `speed`
 
-**Methods**:
+#### Methods
 - `input()`: Checks for continuous key presses to determine the player's intended movement and updates the direction vector.
 - `move(dt)`: Calculates the movement for the current frame based on direction, speed, and dt.
 - `update(dt)`: The main method called by the sprite group on every frame. It orchestrates the player's actions by calling input() and then move().
+
+### Importing Player Graphics
+
+
 
 ## `pygame`
 
