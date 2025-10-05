@@ -49,7 +49,7 @@ This self-contained structure makes it easy to add and switch between multiple l
 
 ### Importing Player Graphics
 
-
+Create a dictionary that maps animation names (e.g., `up`, `down`, `left_water`, `right_water`, etc.) to a list of corresponding `Surface`s that are created when loading the PNG images.
 
 ## `pygame`
 

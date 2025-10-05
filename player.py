@@ -1,9 +1,12 @@
 import pygame
 from settings import * 
+from support import *
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos, group):
         super().__init__(group) # Add this sprite to the specified group(s)
+
+        self.import_assets() # Needs to be at the top
 
         # general setup
         self.image = pygame.Surface((32, 64)) # placeholder
@@ -14,6 +17,21 @@ class Player(pygame.sprite.Sprite):
         self.direction = pygame.math.Vector2() # default: (0,0)
         self.pos = pygame.math.Vector2(self.rect.center) # we'll need to update the self.rect in the end
         self.speed = 200
+    
+    def import_assets(self):
+        # Character animations: a dict with keys mapping to a list of Surfaces
+        # TODO: Use a diffusion model to generate variant characters with matching animations
+        self.animations = {
+            'up': [], 'down': [], 'left': [], 'right': [],
+            'right_idle': [], 'left_idle': [], 'up_idle': [], 'down_idle': [],
+            'right_hoe': [], 'left_hoe': [], 'up_hoe': [], 'down_hoe': [],
+            'right_axe': [], 'left_axe': [], 'up_axe': [], 'down_axe': [],
+            'right_water': [], 'left_water': [], 'up_water': [], 'down_water': [],
+        }
+
+        for animation in self.animations.keys():
+            full_path = './graphics/character/' + animation
+            self.animations[animation] = import_folder(full_path)
 
     def input(self):
         # when to call the input() method? updating this player via update() called in the Spite group in the Level instance
