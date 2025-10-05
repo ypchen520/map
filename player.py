@@ -7,9 +7,14 @@ class Player(pygame.sprite.Sprite):
         super().__init__(group) # Add this sprite to the specified group(s)
 
         self.import_assets() # Needs to be at the top
+        
+        # For creating images using the imported assets (as Surfaces)
+        self.status = 'down_idle'
+        self.frame_index = 0 # for animation
 
         # general setup
-        self.image = pygame.Surface((32, 64)) # placeholder
+        # self.image = pygame.Surface((32, 64)) # placeholder
+        self.image = self.animations[self.status][self.frame_index]
         self.image.fill('green')
         self.rect = self.image.get_rect(center=pos) # creates the invisible rectangular box (pygame.Rect) that Pygame uses to handle positioning, movement, and collision detection for your visible image.
 
