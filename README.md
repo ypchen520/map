@@ -58,6 +58,10 @@ Create a dictionary that maps animation names (e.g., `'up'`, `'down'`, `'left_wa
 - `input()`: Reads keyboard input to set the player's direction vector and update the animation `status`.
 - `get_status()`: Appends `_idle` to the player's `status` string whenever the player is stationary, which triggers the idle animation.
 
+### Tool Use
+
+`timer.py`: This `Timer` class creates a non-blocking cooldown or delay. It lets you schedule an action to happen after a set time has passed without freezing the rest of your game.
+
 ## `pygame`
 
 A `Surface` only handles **visuals** (the pixels of an image), while a `Rect` handles **position and collision** (the coordinates and dimensions). They are separate objects for separate jobs.

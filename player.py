@@ -22,6 +22,9 @@ class Player(pygame.sprite.Sprite):
         self.direction = pygame.math.Vector2() # default: (0,0)
         self.pos = pygame.math.Vector2(self.rect.center) # we'll need to update the self.rect in the end
         self.speed = 200
+
+        # tools
+        self.selected_tool = 'axe'
     
     def import_assets(self):
         # Character animations: a dict with keys mapping to a list of Surfaces
@@ -48,6 +51,7 @@ class Player(pygame.sprite.Sprite):
         # when to call the input() method? updating this player via update() called in the Spite group in the Level instance
         keys = pygame.key.get_pressed()
         
+        # direction
         if keys[pygame.K_UP]:
             self.direction.y = -1
             self.status = 'up'
@@ -65,6 +69,10 @@ class Player(pygame.sprite.Sprite):
             self.status = 'left'
         else:
             self.direction.x = 0
+        
+        # tool use
+        if keys[pygame.K_SPACE]:
+            # timer for tool use
 
     def get_status(self):
         # idle: if the player is not moving, add _idle to the status
@@ -72,6 +80,7 @@ class Player(pygame.sprite.Sprite):
             self.status = self.status.split('_')[0] + '_idle'
         
         # tool use
+        
 
     def move(self, dt):
         # fix: moving diagonally is faster
