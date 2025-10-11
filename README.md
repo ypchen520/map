@@ -60,6 +60,8 @@ Create a dictionary that maps animation names (e.g., `'up'`, `'down'`, `'left_wa
 
 ### Tool Use
 
+#### Timer
+
 `timer.py`: This timer is used to create a committed action lock for using a tool. It ensures that when the player starts an action (like swinging an axe), they are locked into that animation for a set duration and cannot do other things, like move.
 
 This timer enforces that same logic in the game:
@@ -67,6 +69,26 @@ This timer enforces that same logic in the game:
 - You are stuck in the swinging motion for 350 milliseconds (duration).
 - Only after the swing is complete can you move again.
 - The hammer hits the target at the end of the swing (`self.use_tool()`).
+
+**How It Works in the Code**
+1. Starting the Action (in `input()`)
+When you press the SPACE key:
+- `self.timers['tool_use'].activate()`: The 350ms countdown begins.
+- `if not self.timers['tool_use'].active:`: This condition now becomes `False`. The entire movement input block is skipped on subsequent frames. This is what locks the player.
+- `self.direction = pygame.math.Vector2()`: The player's movement is immediately stopped.
+- `self.frame_index` = 0: The tool animation starts from the beginning.
+
+2. During the Action
+For the next 350 milliseconds, on every frame:
+- The `input()` method's movement checks are ignored because the timer is active.
+- The `get_status()` method sees the timer is active and forces the animation status to be the tool animation (e.g., `'down_axe'`).
+- The `update_timers()` method calls the timer's `update()`, checking if the time is up yet.
+
+3. Finishing the Action
+After 350 milliseconds have passed:
+- The timer's `update()` method deactivates itself.
+- It then calls the function it was given: `self.use_tool()`. This is where the "hit" or effect of the tool actually happens.
+- On the very next frame, `if not self.timers['tool_use'].active:` is now `True`, and the player regains control of their movement.
 
 ## `pygame`
 
