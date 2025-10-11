@@ -1,6 +1,7 @@
 import pygame
 from settings import * 
 from support import *
+from timer import Timer
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos, group):
@@ -14,14 +15,19 @@ class Player(pygame.sprite.Sprite):
 
         # general setup
         # self.image = pygame.Surface((32, 64)) # placeholder
+        # self.image.fill('green')
         self.image = self.animations[self.status][self.frame_index]
-        self.image.fill('green')
         self.rect = self.image.get_rect(center=pos) # creates the invisible rectangular box (pygame.Rect) that Pygame uses to handle positioning, movement, and collision detection for your visible image.
 
         # movement attributes
         self.direction = pygame.math.Vector2() # default: (0,0)
         self.pos = pygame.math.Vector2(self.rect.center) # we'll need to update the self.rect in the end
         self.speed = 200
+
+        # timers
+        self.timers = {
+            'tool_use': Timer(350, self.use_tool)
+        }
 
         # tools
         self.selected_tool = 'axe'
@@ -51,36 +57,52 @@ class Player(pygame.sprite.Sprite):
         # when to call the input() method? updating this player via update() called in the Spite group in the Level instance
         keys = pygame.key.get_pressed()
         
-        # direction
-        if keys[pygame.K_UP]:
-            self.direction.y = -1
-            self.status = 'up'
-        elif keys[pygame.K_DOWN]:
-            self.direction.y = 1
-            self.status = 'down'
-        else:
-            self.direction.y = 0
-        
-        if keys[pygame.K_RIGHT]:
-            self.direction.x = 1
-            self.status = 'right'
-        elif keys[pygame.K_LEFT]:
-            self.direction.x = -1
-            self.status = 'left'
-        else:
-            self.direction.x = 0
-        
-        # tool use
-        if keys[pygame.K_SPACE]:
-            # timer for tool use
+        if not self.timers['tool_use'].active:
+            # direction
+            if keys[pygame.K_UP]:
+                self.direction.y = -1
+                self.status = 'up'
+            elif keys[pygame.K_DOWN]:
+                self.direction.y = 1
+                self.status = 'down'
+            else:
+                self.direction.y = 0
+            
+            if keys[pygame.K_RIGHT]:
+                self.direction.x = 1
+                self.status = 'right'
+            elif keys[pygame.K_LEFT]:
+                self.direction.x = -1
+                self.status = 'left'
+            else:
+                self.direction.x = 0
+            
+            # tool use
+            if keys[pygame.K_SPACE]:
+                self.timers['tool_use'].activate()
+                self.direction = pygame.math.Vector2()
+                self.frame_index = 0
+
 
     def get_status(self):
+        """
+        Determine the player's status based on movement and actions.
+        This status is used to select the appropriate animation.
+        """
         # idle: if the player is not moving, add _idle to the status
         if self.direction.magnitude() == 0:
             self.status = self.status.split('_')[0] + '_idle'
         
         # tool use
-        
+        if self.timers['tool_use'].active:
+            self.status = self.status.split('_')[0] + '_' + self.selected_tool
+    
+    def update_timers(self):
+        for timer in self.timers.values():
+            timer.update()
+
+    def use_tool(self):
+        print(self.selected_tool)
 
     def move(self, dt):
         # fix: moving diagonally is faster
@@ -101,4 +123,6 @@ class Player(pygame.sprite.Sprite):
         # potentially using *args instead of dt
         self.input()
         self.get_status()
+        self.update_timers()
         self.move(dt)
+        self.animate(dt)

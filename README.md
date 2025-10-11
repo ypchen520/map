@@ -60,7 +60,13 @@ Create a dictionary that maps animation names (e.g., `'up'`, `'down'`, `'left_wa
 
 ### Tool Use
 
-`timer.py`: This `Timer` class creates a non-blocking cooldown or delay. It lets you schedule an action to happen after a set time has passed without freezing the rest of your game.
+`timer.py`: This timer is used to create a committed action lock for using a tool. It ensures that when the player starts an action (like swinging an axe), they are locked into that animation for a set duration and cannot do other things, like move.
+
+This timer enforces that same logic in the game:
+- You press SPACE to start the swing (`.activate()`).
+- You are stuck in the swinging motion for 350 milliseconds (duration).
+- Only after the swing is complete can you move again.
+- The hammer hits the target at the end of the swing (`self.use_tool()`).
 
 ## `pygame`
 
